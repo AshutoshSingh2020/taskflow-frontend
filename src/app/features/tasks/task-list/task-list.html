@@ -1,0 +1,169 @@
+<div class="page">
+  <div class="toolbar">
+    <div class="filters">
+      <button type="button" [class.active]="statusFilter() === 'all'" (click)="setStatusFilter('all')">All</button>
+      <button type="button" [class.active]="statusFilter() === 'pending'" (click)="setStatusFilter('pending')">Pending</button>
+      <button type="button" [class.active]="statusFilter() === 'completed'" (click)="setStatusFilter('completed')">Completed</button>
+    </div>
+    <button type="button" class="primary-btn" (click)="openCreateForm()">+ New Task</button>
+  </div>
+
+  @if (role() === 'manager' && managerGroups().length) {
+    <section class="overview">
+      <h2>Team Leads Overview</h2>
+      <div class="overview-cards">
+        @for (group of managerGroups(); track group.teamLead?.id ?? 'other') {
+          <div class="overview-card">
+            <div class="overview-card-header">
+              {{ group.teamLead ? group.teamLead.username : 'Other / Direct' }}
+            </div>
+            <div class="overview-card-body">
+              <span>{{ group.tasks.length }} task(s)</span>
+              <span>{{ completedCount(group.tasks) }} completed</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <div class="task-table">
+    <div class="task-row task-row--head">
+      <span>Title</span>
+      <span>Assigned To</span>
+      <span>Created By</span>
+      <span>Created</span>
+      <span>Status</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p class="empty-state">Loading tasks…</p>
+    } @else if (tasks().length === 0) {
+      <p class="empty-state">No tasks found.</p>
+    } @else {
+      @for (task of tasks(); track task._id) {
+        <div class="task-row">
+          <div class="task-title">
+            <strong>{{ task.title }}</strong>
+            @if (task.description) {
+              <p>{{ task.description }}</p>
+            }
+          </div>
+          <span class="person">
+            {{ task.assignedTo?.username }}
+            <small>{{ task.assignedTo?.role }}</small>
+          </span>
+          <span class="person">
+            {{ task.createdBy?.username }}
+            <small>{{ task.createdBy?.role }}</small>
+          </span>
+          <span class="created-date">{{ task.createdAt | date: 'MMM d, y, h:mm a' }}</span>
+          <span class="status-badge" [attr.data-status]="task.status">{{ task.status }}</span>
+          <div class="actions">
+            <button type="button" (click)="toggleComplete(task)">
+              {{ task.status === 'completed' ? 'Reopen' : 'Complete' }}
+            </button>
+            <button type="button" (click)="openEditForm(task)">Edit</button>
+            <button type="button" class="danger" (click)="requestDelete(task)">Delete</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="pagination" [hidden]="total() === 0">
+    <div class="page-size">
+      <span>Rows per page</span>
+      <select [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        @for (size of pageSizeOptions; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pager">
+      <span class="pager-summary">{{ total() }} task{{ total() === 1 ? '' : 's' }}</span>
+      <button type="button" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Prev</button>
+      @for (p of pageNumbers(); track $index) {
+        @if (p === '...') {
+          <span class="page-ellipsis">…</span>
+        } @else {
+          <button type="button" class="page-number" [class.active]="p === page()" (click)="goToPage(p)">
+            {{ p }}
+          </button>
+        }
+      }
+      <button type="button" [disabled]="page() >= totalPages()" (click)="goToPage(page() + 1)">Next</button>
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <div class="modal-backdrop" (click)="closeForm()">
+      <form class="modal" [formGroup]="form" (ngSubmit)="submitForm()" (click)="$event.stopPropagation()" novalidate>
+        <h2>{{ editingTaskId() ? 'Edit Task' : 'New Task' }}</h2>
+
+        @if (formError()) {
+          <div class="error-banner">{{ formError() }}</div>
+        }
+
+        <label class="field">
+          <span>Title</span>
+          <input type="text" formControlName="title" placeholder="Task title" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <small class="error">Title is required</small>
+          }
+        </label>
+
+        <label class="field">
+          <span>Description</span>
+          <textarea formControlName="description" rows="3" placeholder="Optional details"></textarea>
+        </label>
+
+        @if (canAssign()) {
+          <label class="field">
+            <span>Assign to</span>
+            <select formControlName="assignedTo">
+              <option value="">Myself</option>
+              @for (u of assignableUsers(); track u.id) {
+                <option [value]="u.id">{{ u.username }} ({{ u.role }})</option>
+              }
+            </select>
+          </label>
+        }
+
+        @if (editingTaskId()) {
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" (click)="closeForm()">Cancel</button>
+          <button type="submit" class="primary-btn" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (taskPendingDelete(); as task) {
+    <div class="modal-backdrop" (click)="cancelDelete()">
+      <div class="modal confirm-modal" (click)="$event.stopPropagation()">
+        <h2>Delete task?</h2>
+        <p>Are you sure you want to delete "<strong>{{ task.title }}</strong>"? This cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" (click)="cancelDelete()">Cancel</button>
+          <button type="button" class="danger-btn" [disabled]="deleting()" (click)="confirmDelete()">
+            {{ deleting() ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

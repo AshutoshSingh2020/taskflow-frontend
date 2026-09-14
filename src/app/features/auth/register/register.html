@@ -1,0 +1,99 @@
+<div class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>Create account</h1>
+    <p class="subtitle">Get started with TestFlow</p>
+
+    <label class="field">
+      <span>Username</span>
+      <input type="text" formControlName="username" placeholder="jane_doe" autocomplete="username" />
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <small class="error">
+          @if (form.controls.username.errors?.['required']) { Username is required }
+          @else if (form.controls.username.errors?.['minlength']) { At least 3 characters }
+        </small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Email</span>
+      <input type="email" formControlName="email" placeholder="you@company.com" autocomplete="email" />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <small class="error">
+          @if (form.controls.email.errors?.['required']) { Email is required }
+          @else if (form.controls.email.errors?.['email']) { Enter a valid email }
+        </small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Password</span>
+      <div class="password-input">
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="At least 8 characters"
+          autocomplete="new-password"
+        />
+        <button
+          type="button"
+          class="toggle-visibility"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+        >
+          @if (showPassword()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        </button>
+      </div>
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="error">
+          @if (form.controls.password.errors?.['required']) { Password is required }
+          @else if (form.controls.password.errors?.['minlength']) { At least 8 characters }
+          @else if (form.controls.password.errors?.['maxlength']) { At most 128 characters }
+        </small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Role</span>
+      <select formControlName="role">
+        @for (r of roles; track r.value) {
+          <option [value]="r.value">{{ r.label }}</option>
+        }
+      </select>
+    </label>
+
+    @if (needsParent()) {
+      <label class="field">
+        <span>{{ parentLabel() }}</span>
+        <select formControlName="parentId">
+          <option value="" disabled>Select {{ parentLabel() }}</option>
+          @for (p of parentOptions(); track p.id) {
+            <option [value]="p.id">{{ p.username }}</option>
+          }
+        </select>
+        @if (parentOptions().length === 0) {
+          <small class="hint">
+            No {{ parentLabel() }}s registered yet — ask one to register first.
+          </small>
+        }
+      </label>
+    }
+
+    <button type="submit" class="primary-btn" [disabled]="submitting()">
+      {{ submitting() ? 'Creating account…' : 'Create account' }}
+    </button>
+
+    <p class="switch-link">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </p>
+  </form>
+</div>

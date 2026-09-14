@@ -1,0 +1,11 @@
+<nav class="navbar">
+  <div class="brand">TestFlow</div>
+
+  @if (currentUser(); as user) {
+    <div class="user-info">
+      <span class="username">{{ user.username }}</span>
+      <span class="role-badge" [attr.data-role]="user.role">{{ user.role }}</span>
+      <button type="button" class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  }
+</nav>

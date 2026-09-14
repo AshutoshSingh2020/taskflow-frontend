@@ -1,0 +1,52 @@
+.not-found-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #f4f6f8;
+}
+
+.not-found-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.code {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #4f46e5;
+  line-height: 1;
+}
+
+h1 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1.25rem;
+  color: #1a1a1a;
+}
+
+p {
+  margin: 0 0 1.5rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.primary-btn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+
+  &:hover {
+    background: #4338ca;
+  }
+}
